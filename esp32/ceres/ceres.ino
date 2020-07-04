@@ -1,14 +1,22 @@
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer.h>
-#include <string.h>
+#include <string>
 #include <ESPmDNS.h>
+#include "sensors.h"
+
+using namespace std;
 
 const char* ssid = "Azul-ai7i";
 const char* password = "r3n4t4n3g4";
 
 
+// Pinout
+#define humidity_sensor_pin 33
+#define light_sensor_pin 32
 
+// Server config
 
 WebServer server(80);
 
@@ -16,7 +24,7 @@ WebServer server(80);
 void setup_routing() {
   server.on("/", handle_OnConnect);
   server.on("/temperature", getTemperature);
-  server.on("/light", getPressure);
+  server.on("/light", getLight);
   server.on("/humidity", getHumidity);
   server.on("/settings", HTTP_GET, getSettings);
   server.onNotFound(handle_NotFound);
@@ -24,6 +32,7 @@ void setup_routing() {
   // start server
   server.begin();
 }
+
 
 void getSettings() {
     String response = "{";
@@ -75,21 +84,19 @@ void handle_OnConnect()
 void getTemperature() {
   String temperature = "temperature1234";
   Serial.println("Get temperature");
-  server.send(200, "text/html", temperature);
+  server.send(200, "text/json", temperature);
 }
  
 void getHumidity() {
-  String humidity = "{}";
+  int humidity = getSensor(humidity_sensor_pin);
   Serial.println("Get humidity");
-//  create_json("humidity", humidity, "%");
-  server.send(200, "application/json", humidity );
+  server.send(200, "text/json", "{\"value\": \"" +  String(humidity) + "\"}" );
 }
  
-void getPressure() {
-  String pressure = "";
-  Serial.println("Get pressure");
-//  create_json("pressure", pressure, "mBar");
-  server.send(200, "application/json", pressure);
+void getLight() {
+  int light = getSensor(light_sensor_pin);
+  Serial.println("Get light");
+  server.send(200, "text/json", "{\"value\": \"" +  String(light) + "\"}" );
 }
  
 // void getEnv() {
